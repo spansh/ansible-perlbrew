@@ -1,5 +1,5 @@
 ---
-perlbrew_user: www
-perl_version: perl-5.22.0
+perlbrew_user: vagrant
+perl_version: perl-5.26.1
 perlbrew_root: ~/perl5/perlbrew
 switch_to_new_perl: true

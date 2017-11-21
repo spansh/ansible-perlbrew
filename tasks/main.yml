@@ -12,7 +12,7 @@
   - tar
   - patch
   - unzip
-  sudo: yes
+  become: yes
   when: ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu'
   tags: [ perlbrew, prereq ]
 
@@ -27,18 +27,18 @@
   - tar
   - patch
   - unzip
-  sudo: yes
+  become: yes
   when: ansible_distribution == 'CentOS' or ansible_distribution == 'RedHat'
 
 - name: Make PERLBREW_ROOT
   file: path='{{ perlbrew_root }}' owner='{{ perlbrew_user }}' mode=0755 state=directory
-  sudo: yes
-  sudo_user: '{{ perlbrew_user }}'
+  become: yes
+  become_user: '{{ perlbrew_user }}'
   tags: [ perlbrew ]
 
 - name: Install perlbrew
-  sudo: yes
-  sudo_user: '{{ perlbrew_user }}'
+  become: yes
+  become_user: '{{ perlbrew_user }}'
   shell: curl -L http://install.perlbrew.pl | bash creates="{{ perlbrew_root }}/bin/perlbrew"
   register: install_perlbrew
   tags: [ perlbrew ]
@@ -49,12 +49,12 @@
 
 - name: Make sure ~/.bashrc exists
   file: path='~{{ perlbrew_user }}/.bashrc' state=touch mode=0644 force=no
-  sudo: yes
-  sudo_user: '{{ perlbrew_user }}'
+  become: yes
+  become_user: '{{ perlbrew_user }}'
 
 - name: Init ~/.bashrc
-  sudo: yes
-  sudo_user: '{{ perlbrew_user }}'
+  become: yes
+  become_user: '{{ perlbrew_user }}'
   lineinfile: dest='{{ item.dest }}' line='{{ item.line }}'
   with_items:
   - { dest: '~{{ perlbrew_user }}/.bashrc', line: 'export PERLBREW_ROOT={{ perlbrew_root }}' }
@@ -63,25 +63,25 @@
   tags: [ perlbrew, bashrc ]
 
 - name: Install {{ perl_version }} (may take some time...)
-  sudo: yes
-  sudo_user: '{{ perlbrew_user }}'
-  shell: "{{ perlbrew_bin }} install {{ perl_version }} --as {{ perlbrew_as }} --notest -Duseshrplib --force creates='{{ perlbrew_root }}/perls/{{ perlbrew_as }}'"
+  become: yes
+  become_user: '{{ perlbrew_user }}'
+  shell: "{{ perlbrew_bin }} install {{ perl_version }} --as {{ perlbrew_as | default(perl_version) }} --notest -Duseshrplib --force creates='{{ perlbrew_root }}/perls/{{ perlbrew_as | default(perl_version) }}'"
   register: perlbrew_build_output
   tags: [ perlbrew ]
 
 - name: Fail if Perl not installed correctly
   fail: msg="Perlbrew could not build Perl. Check the build log"
-  when: "perlbrew_build_output.changed == True and  perlbrew_as + ' is successfully installed.' not in perlbrew_build_output.stdout_lines"
+  when: "perlbrew_build_output.changed == True and  perlbrew_as | default(perl_version) + ' is successfully installed.' not in perlbrew_build_output.stdout_lines"
 
 - name: Install cpanm
-  sudo: yes
-  sudo_user: '{{ perlbrew_user }}'
+  become: yes
+  become_user: '{{ perlbrew_user }}'
   shell: "{{ perlbrew_bin }} install-cpanm creates='{{ perlbrew_root }}/bin/cpanm'"
   tags: [ perlbrew ]
 
 - name: Use Perl {{ perl_version }}
-  sudo: yes
-  sudo_user: '{{ perlbrew_user }}'
-  shell: PERLBREW_BASHRC_VERSION=1 {{ perlbrew_bin }} switch {{ perlbrew_as }}
+  become: yes
+  become_user: '{{ perlbrew_user }}'
+  shell: PERLBREW_BASHRC_VERSION=1 {{ perlbrew_bin }} switch {{ perlbrew_as | default(perl_version) }}
   when: switch_to_new_perl
   tags: [ perlbrew ]
