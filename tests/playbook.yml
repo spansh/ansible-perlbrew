@@ -8,6 +8,6 @@
   roles:
     # it is the directory relative to your current working directory under which the role files are located
     # ./ does not work - why ?
-    - role: ../tobybro.perlbrew
+    - role: ../ansible-perlbrew
       perl_user: vagrant
       perl_version: perl-5.26.1
