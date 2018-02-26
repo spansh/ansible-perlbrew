@@ -43,8 +43,10 @@
   register: install_perlbrew
   tags: [ perlbrew ]
 
+#    perlbrew_bin: PERLBREW_ROOT={{ perlbrew_root }} {{ perlbrew_root}}/bin/perlbrew
+#    perlbrew_bin: {{ perlbrew_root}}/bin/perlbrew
 - set_fact:
-    perlbrew_bin: PERLBREW_ROOT={{ perlbrew_root }} {{ perlbrew_root}}/bin/perlbrew
+    perlbrew_bin: "{{ perlbrew_root}}/bin/perlbrew"
   tags: [ perlbrew ]
 
 - name: Make sure ~/.bashrc exists
@@ -62,7 +64,11 @@
   - { dest: '~{{ perlbrew_user }}/.bashrc', line: '. ${PERLBREW_ROOT}/etc/perlbrew-completion.bash' }
   tags: [ perlbrew, bashrc ]
 
-- name: Install {{ perl_version }} (may take some time...)
+
+- name: Show perl version requested
+  debug: msg="installing {{ perl_version }}"
+
+- name: Install PERL_VERSION (may take some time...)
   become: yes
   become_user: '{{ perlbrew_user }}'
   shell: "{{ perlbrew_bin }} install {{ perl_version }} --as {{ perlbrew_as | default(perl_version) }} --notest -Duseshrplib --force creates='{{ perlbrew_root }}/perls/{{ perlbrew_as | default(perl_version) }}'"
@@ -72,6 +78,7 @@
 - name: Fail if Perl not installed correctly
   fail: msg="Perlbrew could not build Perl. Check the build log"
   when: "perlbrew_build_output.changed == True and  perlbrew_as | default(perl_version) + ' is successfully installed.' not in perlbrew_build_output.stdout_lines"
+  tags: [ perlbrew ]
 
 - name: Install cpanm
   become: yes
@@ -79,9 +86,32 @@
   shell: "{{ perlbrew_bin }} install-cpanm creates='{{ perlbrew_root }}/bin/cpanm'"
   tags: [ perlbrew ]
 
-- name: Use Perl {{ perl_version }}
+
+# If switch_to_new_perl is true we activate the perl_version for this environment
+# and check the activation. We fail on error.
+# NOTE: become_flags: -i is a must here ! It provides the environment calling .profile/.bashrc
+#       which is needed for the perlbrew commands.
+- block:
+
+  - name: Use Perl {{ perl_version }}
+    shell: PERLBREW_BASHRC_VERSION=1 {{ perlbrew_bin }} switch {{ perlbrew_as | default(perl_version) }}
+
+  - name: find active perl version 
+    shell: >
+        {{perlbrew_bin}} switch | grep 'perl-[[:alnum:].-][[:alnum:].-]*' | sed -e 's/^.*\(perl-[[:alnum:].-][[:alnum:].-]*\).*$/\1/' 
+    register: active_perl 
+
+  
+  - name: check if active perl version is correct
+    debug: msg="ok, active perl version is {{ active_perl.stdout }}"
+    when: active_perl.stdout == perl_version
+
+  - name: check if activation of perl version  failed
+    fail: msg="perl version {{ perl_version }} not active !!!"
+    when: active_perl.stdout != perl_version
+
   become: yes
-  become_user: '{{ perlbrew_user }}'
-  shell: PERLBREW_BASHRC_VERSION=1 {{ perlbrew_bin }} switch {{ perlbrew_as | default(perl_version) }}
+  become_user: "{{ perlbrew_user }}" 
+  become_flags: -i
   when: switch_to_new_perl
-  tags: [ perlbrew ]
+  tags: [ perlbrew, switch ]
