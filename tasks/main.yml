@@ -42,6 +42,7 @@
   environment:
     PERLBREW_ROOT: '{{ perlbrew_root }}'
   shell: curl -L http://install.perlbrew.pl | bash creates="{{ perlbrew_root }}/bin/perlbrew"
+  warn: false
   register: install_perlbrew
   tags: [ perlbrew ]
 
@@ -80,6 +81,7 @@
 - name: Fail if Perl not installed correctly
   fail: msg="Perlbrew could not build Perl. Check the build log"
   when: "perlbrew_build_output.changed == True and  perlbrew_as | default(perl_version) + ' is successfully installed.' not in perlbrew_build_output.stdout_lines"
+  debug: msg="{{ perlbrew_build_output.stdout_lines }}"
   tags: [ perlbrew ]
 
 - name: Install cpanm
