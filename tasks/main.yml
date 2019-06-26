@@ -42,7 +42,8 @@
   environment:
     PERLBREW_ROOT: '{{ perlbrew_root }}'
   shell: curl -L http://install.perlbrew.pl | bash creates="{{ perlbrew_root }}/bin/perlbrew"
-  warn: false
+  args:
+    warn: false
   register: install_perlbrew
   tags: [ perlbrew ]
 
