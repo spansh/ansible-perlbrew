@@ -32,7 +32,7 @@
 
 - name: Make PERLBREW_ROOT
   environment:
-    PERLBREW_ROOT: {{ perlbrew_root }}
+    PERLBREW_ROOT: '{{ perlbrew_root }}'
   file: path='{{ perlbrew_root }}' owner='{{ perlbrew_user }}' mode=0755 state=directory
   become: yes
   become_user: '{{ perlbrew_user }}'
