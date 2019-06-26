@@ -75,12 +75,14 @@
 - name: Install PERL_VERSION (may take some time...)
   become: yes
   become_user: '{{ perlbrew_user }}'
+  environment:
+    PERLBREW_ROOT: '{{ perlbrew_root }}'
   shell: "{{ perlbrew_bin }} install {{ perl_version }} --as {{ perlbrew_as | default(perl_version) }} --notest -Duseshrplib --force creates='{{ perlbrew_root }}/perls/{{ perlbrew_as | default(perl_version) }}'"
   register: perlbrew_build_output
   tags: [ perlbrew ]
 
 - name: Perl Build Output
-  debug: msg="Exit Code: {{ perlbrew_build_output.rc }} Build Output: {{ perlbrew_build_output.stdout_lines }}"
+  debug: msg="{{ perlbrew_build_output.stdout_lines }}"
 
 - name: Fail if Perl not installed correctly
   fail: msg="Perlbrew could not build Perl. Check the build log"
@@ -90,6 +92,8 @@
 - name: Install cpanm
   become: yes
   become_user: '{{ perlbrew_user }}'
+  environment:
+    PERLBREW_ROOT: '{{ perlbrew_root }}'
   shell: "{{ perlbrew_bin }} install-cpanm creates='{{ perlbrew_root }}/bin/cpanm'"
   tags: [ perlbrew ]
 
@@ -101,9 +105,13 @@
 - block:
 
   - name: Use Perl {{ perl_version }}
+    environment:
+      PERLBREW_ROOT: '{{ perlbrew_root }}'
     shell: PERLBREW_BASHRC_VERSION=1 {{ perlbrew_bin }} switch {{ perlbrew_as | default(perl_version) }}
 
   - name: find active perl version 
+    environment:
+      PERLBREW_ROOT: '{{ perlbrew_root }}'
     shell: >
         {{perlbrew_bin}} switch | grep 'perl-[[:alnum:].-][[:alnum:].-]*' | sed -e 's/^.*\(perl-[[:alnum:].-][[:alnum:].-]*\).*$/\1/' 
     register: active_perl 
