@@ -31,8 +31,6 @@
   when: ansible_distribution == 'CentOS' or ansible_distribution == 'RedHat'
 
 - name: Make PERLBREW_ROOT
-  environment:
-    PERLBREW_ROOT: '{{ perlbrew_root }}'
   file: path='{{ perlbrew_root }}' owner='{{ perlbrew_user }}' mode=0755 state=directory
   become: yes
   become_user: '{{ perlbrew_user }}'
@@ -41,6 +39,8 @@
 - name: Install perlbrew
   become: yes
   become_user: '{{ perlbrew_user }}'
+  environment:
+    PERLBREW_ROOT: '{{ perlbrew_root }}'
   shell: curl -L http://install.perlbrew.pl | bash creates="{{ perlbrew_root }}/bin/perlbrew"
   register: install_perlbrew
   tags: [ perlbrew ]
