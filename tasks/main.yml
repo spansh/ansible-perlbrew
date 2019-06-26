@@ -80,7 +80,7 @@
   tags: [ perlbrew ]
 
 - name: Perl Build Output
-  debug: msg="{{ perlbrew_build_output.stdout_lines }}"
+  debug: msg="Exit Code: {{ perlbrew_build_output.rc }} Build Output: {{ perlbrew_build_output.stdout_lines }}"
 
 - name: Fail if Perl not installed correctly
   fail: msg="Perlbrew could not build Perl. Check the build log"
