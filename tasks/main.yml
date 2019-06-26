@@ -77,6 +77,7 @@
   become_user: '{{ perlbrew_user }}'
   environment:
     PERLBREW_ROOT: '{{ perlbrew_root }}'
+    PERLBREW_CPAN_MIRROR: 'https://www.cpan.org'
   shell: "{{ perlbrew_bin }} install {{ perl_version }} --as {{ perlbrew_as | default(perl_version) }} --notest -Duseshrplib --force creates='{{ perlbrew_root }}/perls/{{ perlbrew_as | default(perl_version) }}'"
   register: perlbrew_build_output
   tags: [ perlbrew ]
